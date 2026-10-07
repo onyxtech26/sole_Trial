@@ -10,9 +10,10 @@
 
 import { useSyncExternalStore } from 'react';
 import type { StoreData, StoreKey } from '../types';
-import { TRIAL_SEED } from './trial';
+import { TRIAL_SEED, trialAccount } from './trial';
 
-const CACHE_KEY = 'sole_store_cache_v2';
+/** One copy per trial, so two clients' trials opened in one browser never mix. */
+const cacheKey = () => `sole_store_v3_${trialAccount()?.id ?? 'none'}`;
 
 const EMPTY: StoreData = {
   bookings: [], products: [], guides: [], staff: [],
@@ -38,7 +39,7 @@ function emit(): void {
 /* ── cache ──────────────────────────────────────────────────────────────── */
 function readCache(): Partial<StoreData> | null {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(cacheKey());
     return raw ? (JSON.parse(raw) as Partial<StoreData>) : null;
   } catch {
     return null;
@@ -47,7 +48,7 @@ function readCache(): Partial<StoreData> | null {
 
 function writeCache(): void {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+    localStorage.setItem(cacheKey(), JSON.stringify(data));
   } catch {
     // Unlike the full build there is no server copy, so a failed write loses data.
     errorHandler('This browser is out of storage space. Remove some uploaded images and try again.');
@@ -77,12 +78,17 @@ export function commit(patch: Partial<StoreData>): void {
 /* ── lifecycle ──────────────────────────────────────────────────────────── */
 /** A first visit starts from the sample guides and template; later visits from their own data. */
 export async function hydrate(): Promise<void> {
-  if (!readCache()) commit(TRIAL_SEED);
-  else primeFromCache();
+  if (readCache()) return primeFromCache();
+  data = { ...EMPTY };
+  commit(TRIAL_SEED);
 }
 
-/** Signing out keeps the data: there is no other copy. */
-export function teardown(): void {}
+/** Signing out keeps the data in the browser (there is no other copy) but
+    clears it from memory, so the next trial opened here starts from its own. */
+export function teardown(): void {
+  data = { ...EMPTY };
+  emit();
+}
 
 /** Nothing to reload from: the browser already holds everything. */
 export async function refresh(): Promise<void> {}

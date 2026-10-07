@@ -497,3 +497,97 @@ select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
   [data-r='doc'] tr { break-inside: avoid; break-after: auto; }
   [data-r='doc'] thead { display: table-header-group; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Landing page (components/Landing.tsx). Same tokens and flat rules as the
+   app; only the scale is larger, since this page is read rather than worked in.
+   Breakpoints are written against the unzoomed viewport, as above.
+   ══════════════════════════════════════════════════════════════════════════ */
+.lp { font-size: 13px; line-height: 1.45; }
+.lp a:hover { text-decoration: none; }
+.lp-wrap { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+.lp-nav { position: sticky; top: 0; z-index: 20; }
+.lp-nav-row { height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.lp-links { display: flex; gap: 24px; }
+.lp-links a { color: rgba(255, 255, 255, .66); font-size: 12.5px; font-weight: 500; transition: color .2s var(--ease-soft); }
+.lp-links a:hover { color: #fff; }
+
+.lp-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 36px; padding: 0 16px; border-radius: 6px; font-size: 12.5px; font-weight: 600;
+  border: 1px solid transparent; white-space: nowrap;
+  transition: background .2s var(--ease-soft), color .2s var(--ease-soft), border-color .2s var(--ease-soft), transform .2s var(--ease);
+}
+.lp-btn:hover { transform: translateY(-1px); }
+.lp-btn:active { transform: translateY(0); }
+.lp-btn-primary { background: var(--ink); color: #fff; }
+.lp-btn-primary:hover { background: #1b2437; color: #fff; }
+.lp-btn-accent { background: var(--accent); color: var(--ink); }
+.lp-btn-accent:hover { background: #fdb44e; color: var(--ink); }
+.lp-btn-ghost { background: var(--panel); color: var(--ink); border-color: var(--line); }
+.lp-btn-ghostNavy { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .18); }
+.lp-btn-ghostNavy:hover { border-color: rgba(255, 255, 255, .4); color: #fff; }
+
+.lp-hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 48px; align-items: center; padding-top: 64px; padding-bottom: 72px; }
+.lp-h1 { margin: 14px 0 0; font-size: 44px; line-height: 1.08; font-weight: 600; letter-spacing: -.02em; text-wrap: balance; }
+.lp-lead { margin: 18px 0 0; font-size: 15px; line-height: 1.6; max-width: 480px; }
+.lp-shot { border-radius: 10px; border: 1px solid rgba(255, 255, 255, .1); background: rgba(255, 255, 255, .04); padding: 6px; }
+.lp-shot img { display: block; width: 100%; height: auto; border-radius: 6px; }
+
+.lp-strip { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 16px; padding-bottom: 16px; }
+.lp-strip > span:nth-child(5) { margin-left: 14px; }
+
+.lp-section { padding: 72px 0; }
+.lp-h2 { margin: 10px 0 0; font-size: 30px; line-height: 1.15; font-weight: 600; letter-spacing: -.015em; text-wrap: balance; }
+.lp-sub { margin: 12px 0 0; font-size: 14px; line-height: 1.6; max-width: 620px; }
+
+.lp-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 32px; }
+.lp-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.lp-card { background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 20px; }
+
+.lp-table { border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: var(--panel); }
+.lp-table-head, .lp-table-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 12px 18px; }
+.lp-table-head { background: var(--ink); color: #fff; font-size: 9.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+.lp-table-head span:last-child { color: #fdb44e; }
+.lp-table-row { border-top: 1px solid var(--line-soft); font-size: 12.5px; }
+
+.lp-pricing-head { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; }
+
+.lp-faq { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 48px; }
+.lp-faq-item { border-bottom: 1px solid var(--line); }
+.lp-faq-item:first-child { border-top: 1px solid var(--line); }
+.lp-faq-item summary {
+  list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; padding: 16px 0; font-size: 14px; font-weight: 600;
+}
+.lp-faq-item summary::-webkit-details-marker { display: none; }
+.lp-faq-item[open] summary svg { transform: rotate(180deg); }
+.lp-faq-item summary svg { transition: transform .25s var(--ease); }
+.lp-faq-item p { margin: 0 0 16px; font-size: 13px; line-height: 1.6; color: #5b6472; max-width: 600px; }
+
+.lp-cta { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding-top: 64px; padding-bottom: 56px; flex-wrap: wrap; }
+.lp-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 18px; padding-bottom: 22px; font-size: 11.5px; color: rgba(255, 255, 255, .45); }
+
+@media (max-width: 1050px) {
+  .lp-hero { grid-template-columns: 1fr; gap: 36px; padding-top: 44px; }
+  .lp-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lp-links { display: none; }
+}
+@media (max-width: 770px) {
+  .lp-wrap { padding: 0 16px; }
+  .lp-h1 { font-size: 32px; }
+  .lp-h2 { font-size: 24px; }
+  .lp-section { padding: 52px 0; }
+  .lp-grid-3, .lp-grid-4, .lp-faq { grid-template-columns: 1fr; }
+  .lp-faq { gap: 20px; }
+  .lp-pricing-head { flex-direction: column; align-items: flex-start; }
+  .lp-table-head, .lp-table-row { gap: 12px; padding: 11px 12px; }
+  .lp-strip > span:nth-child(5) { margin-left: 0; }
+  .lp-nav-row .lp-btn-ghostNavy { display: none; }
+}
+.lp-contact-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: #f5f7fa;
+  font-size: 12.5px; transition: border-color .2s var(--ease-soft), background .2s var(--ease-soft);
+}
+.lp .lp-contact-row:hover { border-color: var(--accent); background: var(--panel); text-decoration: none; }

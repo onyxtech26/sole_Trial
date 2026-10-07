@@ -1,17 +1,34 @@
 /* ══════════════════════════════════════════════════════════════════════════
    The trial: who the visitor is, how long they have, and what they start with.
 
-   There are no accounts. Starting the trial stamps today's date in the
-   browser; the trial runs TRIAL_DAYS from then on the full Business plan, every
-   screen included. Each visitor gets a private copy that costs nothing to host.
+   An admin creates a trial for a client on /admin and sends them a link. The
+   link carries a pass signed by the server (api/trial.ts) with the client's
+   company and end date, so it cannot be forged or stretched. The client runs
+   the full Business plan until then, with their data kept in their own
+   browser, one private copy per trial. Nothing is stored on a server.
    ══════════════════════════════════════════════════════════════════════════ */
 
 import type { StoreData, User } from '../types';
-import { TRIAL_DAYS } from './config';
 
 const USER_KEY = 'sole_trial_user';
-const STARTED_KEY = 'sole_trial_started';
+const ACCOUNT_KEY = 'sole_trial_account';
 const DAY = 24 * 3600 * 1000;
+
+/** A client's trial, as the admin created it and the server signed it. */
+export interface TrialAccount {
+  id: string;
+  company: string;
+  name: string;
+  email: string;
+  plan: string;
+  issued: number;
+  expires: number;
+}
+
+interface Saved {
+  token: string;
+  trial: TrialAccount;
+}
 
 export const TRIAL_USER: User = {
   id: 'trial',
@@ -22,25 +39,37 @@ export const TRIAL_USER: User = {
   roleLabel: 'Business trial',
 };
 
-/** Stamp the first day of the trial. Later starts keep the original date. */
-export function startTrial(): void {
+function readSaved(): Saved | null {
   try {
-    if (!localStorage.getItem(STARTED_KEY)) localStorage.setItem(STARTED_KEY, String(Date.now()));
+    const raw = localStorage.getItem(ACCOUNT_KEY);
+    return raw ? (JSON.parse(raw) as Saved) : null;
   } catch {
-    /* private mode — the trial simply restarts with the window */
+    return null;
   }
 }
 
-/** Whole days left, counting today; 0 once the trial has ended. */
-export function trialDaysLeft(): number {
-  let started = Date.now();
+/** The trial this browser was opened with, if any. */
+export function trialAccount(): TrialAccount | null {
+  return readSaved()?.trial ?? null;
+}
+
+export function trialToken(): string | null {
+  return readSaved()?.token ?? null;
+}
+
+export function saveTrialAccount(token: string, trial: TrialAccount): void {
   try {
-    started = Number(localStorage.getItem(STARTED_KEY)) || started;
+    localStorage.setItem(ACCOUNT_KEY, JSON.stringify({ token, trial }));
   } catch {
-    /* private mode */
+    /* private mode — the client opens their link again next time */
   }
-  const used = Math.floor((Date.now() - started) / DAY);
-  return Math.max(0, TRIAL_DAYS - used);
+}
+
+/** Whole days left, counting today; 0 once the trial has ended or before one is opened. */
+export function trialDaysLeft(): number {
+  const trial = trialAccount();
+  if (!trial) return 0;
+  return Math.max(0, Math.ceil((trial.expires - Date.now()) / DAY));
 }
 
 export function trialSignedIn(): boolean {
@@ -56,7 +85,7 @@ export function setTrialSignedIn(on: boolean): void {
     if (on) localStorage.setItem(USER_KEY, '1');
     else localStorage.removeItem(USER_KEY);
   } catch {
-    /* private mode — the visitor just signs in again next time */
+    /* private mode — the client just opens their link again */
   }
 }
 

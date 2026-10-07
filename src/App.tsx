@@ -9,6 +9,9 @@ import type { Focus } from './screens/types';
 import { today } from './utils/dates';
 
 import { Splash } from './components/Splash';
+import { Landing } from './components/Landing';
+import { Contact } from './components/Contact';
+import { AdminView } from './components/AdminView';
 import { LoginScreen } from './components/LoginScreen';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
@@ -43,18 +46,37 @@ const TITLES: Record<Screen, [string, string]> = {
   portal: ['My tours', 'Your assigned departures'],
 };
 
+/* One bundle, four doors: the public landing page at "/", contact details at
+   "/contact", the admin page that creates client trials at "/admin", and the
+   app itself at "/app". */
 export default function App() {
+  const path = window.location.pathname.replace(/\/+$/, '') || '/';
+  if (path === '/') return <Landing />;
+  if (path === '/contact') return <Contact />;
   return (
     <ToastHost>
-      <Shell />
+      {path === '/admin' ? <AdminView /> : <Shell />}
     </ToastHost>
   );
+}
+
+/** The pass from an invitation link (/app?invite=…), taken off the address bar
+    once read so it is not left in history or shared by accident. */
+function takeInvite(): string | null {
+  const url = new URL(window.location.href);
+  const invite = url.searchParams.get('invite');
+  if (invite) {
+    url.searchParams.delete('invite');
+    window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+  }
+  return invite;
 }
 
 function Shell() {
   const toast = useToast();
   const store = useStore();
 
+  const [invite] = useState(takeInvite);
   const [user, setUser] = useState<User | null>(null);
   const [booting, setBooting] = useState(true);
   const [held, setHeld] = useState(true);       // minimum splash hold
@@ -77,7 +99,8 @@ function Shell() {
     (async () => {
       try {
         primeFromCache();
-        const u = await getCurrentUser();
+        // An invitation link always opens its own trial, even over another one.
+        const u = invite ? null : await getCurrentUser();
         if (u) {
           await hydrate();
           setUser(u);
@@ -147,7 +170,7 @@ function Shell() {
   }, [store.bookings]);
 
   if (booting || held) return <Splash />;
-  if (!user) return <LoginScreen onSignedIn={handleSignedIn} />;
+  if (!user) return <LoginScreen onSignedIn={handleSignedIn} invite={invite} />;
 
   const [title, sub] = TITLES[screen];
   const rangeAware = screen === 'today' || screen === 'groups' || screen === 'finance';
