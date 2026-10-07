@@ -11,37 +11,48 @@ npm run build    # -> dist/
 npm run lint     # tsc --noEmit
 ```
 
-## How the trial works
+## Pages
 
-- **No accounts.** "Start the free trial" signs the visitor in as a manager on
-  the Business plan, so every screen is open, Finance included.
-- **14 days**, counted from the first start in that browser (`TRIAL_DAYS` in
-  `src/lib/config.ts`). After that the front door shows "trial ended" and a
-  "Get SOLE for your business" button (`CONTACT_URL`). The data stays in the
-  browser, so a visitor who signs up can be shown it again.
-- **All data stays in the visitor's browser** (localStorage, about 5 MB).
-  Uploaded images are kept inline, up to 500 kB each. Nothing is sent to any
-  server, so the trial costs nothing to host and holds no one else's data.
+- `/` the public landing page: features, how it works, pricing, FAQ.
+  Plans and prices live in `src/lib/pricing.ts`.
+- `/admin` where the admin creates a trial for a client and sends the link.
+- `/app` the system itself, opened from the client's trial link.
+
+## How client trials work
+
+- **The admin creates each trial** on `/admin` (company, contact, length) and
+  sends the client the link by WhatsApp or email.
+- **No database.** `api/trial.ts`, a Vercel function, signs each trial's
+  company and end date with `TRIAL_SECRET`. The link carries that pass, so it
+  cannot be forged or stretched, and the server keeps no record.
+  The admin page lists the trials created in that admin's browser.
+- **The client gets the full Business plan** until the end date, with their
+  company name on screens and printouts. Each trial's data stays in the
+  client's browser, separate per trial (localStorage, about 5 MB; images
+  inline up to 500 kB).
+- **Vercel settings:** `ADMIN_PASSWORD` (for `/admin`), `TRIAL_SECRET`
+  (changing it cancels every link) and optional `REVOKED_TRIALS`
+  (comma-separated trial ids to close early; redeploy after changing).
 - **Imports** the Viator reservations export and the GetYourGuide supplier
   bookings export from the Dashboard (`src/utils/viator.ts`,
   `src/utils/getyourguide.ts`).
-- A first visit starts with two sample guides, one staff member and one
+- A new trial starts with two sample guides, one staff member and one
   message template (`src/lib/trial.ts`).
-
-The countdown is a sales tool, not a lock: clearing the browser's site data
-restarts it, and with it wipes the visitor's data.
 
 ## Layout
 
 ```
+api/trial.ts          creates and checks signed client trials
 src/
-  App.tsx             shell: splash, trial door, sidebar, header, routing
+  App.tsx             landing, admin and app routes; splash, trial door, shell
   lib/
     config.ts         company name, trial length, contact link
+    pricing.ts        the plans on the landing page
     trial.ts          trial user, countdown, starter data
     store.ts          the browser-only store: one commit(), useStore()
-    auth.ts           trial sign-in stand-in
+    auth.ts           sign-in from the trial link
     upload.ts         uploads as inline data URLs
+  components/         Landing, AdminView, LoginScreen, shell parts
   utils/              dates, selectors, viator + getyourguide import, exports
   screens/            one file per screen, plus BookingDrawer
 design/               the approved visual handoff the screens are built from
