@@ -770,7 +770,7 @@ export function BookingsView({
             <SortHead w={52} onClick={() => sortBy('resTime')} on={sortCol === 'resTime'}>Res.{arrow('resTime')}</SortHead>
             <SortHead w={58} onClick={() => sortBy('tourTime')} on={sortCol === 'tourTime'}>Tour{arrow('tourTime')}</SortHead>
             <SortHead flex onClick={() => sortBy('tour')} on={sortCol === 'tour'}>Tour type{arrow('tour')}</SortHead>
-            <SortHead w={58} onClick={() => sortBy('tg')} on={sortCol === 'tg'}>Grade{arrow('tg')}</SortHead>
+            <SortHead w={96} onClick={() => sortBy('tg')} on={sortCol === 'tg'}>Grade{arrow('tg')}</SortHead>
             <SortHead w={124} onClick={() => sortBy('lead')} on={sortCol === 'lead'}>Lead passenger{arrow('lead')}</SortHead>
             <SortHead w={38} center onClick={() => sortBy('pax')} on={sortCol === 'pax'}>Pax{arrow('pax')}</SortHead>
             <span style={{ width: 30, flexShrink: 0, textAlign: 'center' }}>Lng</span>
@@ -925,9 +925,10 @@ export function BookingsView({
                 {/* The grade decides capacity and how a booking may be grouped,
                     so it gets its own sortable column rather than living as a
                     prefix on the option title. */}
-                <span style={{
-                  width: 58, flexShrink: 0, fontFamily: MONO, fontSize: 11,
-                  fontWeight: 600, color: C.accentInk,
+                <span title={r.tg} style={{
+                  width: 96, flexShrink: 0, fontFamily: MONO, fontSize: 11,
+                  fontWeight: 600, color: C.accentInk, whiteSpace: 'nowrap',
+                  overflow: 'hidden', textOverflow: 'ellipsis',
                 }}>
                   {r.tg}
                 </span>
