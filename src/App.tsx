@@ -10,6 +10,7 @@ import { today } from './utils/dates';
 
 import { Splash } from './components/Splash';
 import { Landing } from './components/Landing';
+import { Contact } from './components/Contact';
 import { AdminView } from './components/AdminView';
 import { LoginScreen } from './components/LoginScreen';
 import { Sidebar } from './components/Sidebar';
@@ -45,11 +46,13 @@ const TITLES: Record<Screen, [string, string]> = {
   portal: ['My tours', 'Your assigned departures'],
 };
 
-/* Three doors, one bundle: the public landing page at "/", the admin page
-   that creates client trials at "/admin", and the app itself at "/app". */
+/* One bundle, four doors: the public landing page at "/", contact details at
+   "/contact", the admin page that creates client trials at "/admin", and the
+   app itself at "/app". */
 export default function App() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/';
   if (path === '/') return <Landing />;
+  if (path === '/contact') return <Contact />;
   return (
     <ToastHost>
       {path === '/admin' ? <AdminView /> : <Shell />}

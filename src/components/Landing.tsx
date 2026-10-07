@@ -64,7 +64,7 @@ function Heading({ children, onNavy }: { children: ReactNode; onNavy?: boolean }
   );
 }
 
-function CtaLink({ href, children, variant = 'primary', external }: {
+export function CtaLink({ href, children, variant = 'primary', external }: {
   href: string; children: ReactNode; variant?: 'primary' | 'accent' | 'ghost' | 'ghostNavy'; external?: boolean;
 }) {
   return (
@@ -78,36 +78,43 @@ function CtaLink({ href, children, variant = 'primary', external }: {
   );
 }
 
+/** The top bar, shared with the contact page. */
+export function SiteNav() {
+  return (
+    <header className="lp-nav" style={{ background: C.ink, borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+      <div className="lp-wrap lp-nav-row">
+        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }} aria-label="SOLE home">
+          <span style={{
+            width: 30, height: 30, borderRadius: 7, background: 'rgba(253,151,7,.16)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <img src="/logo-mark.png" alt="" style={{ height: 14, width: 'auto' }} />
+          </span>
+          <span style={{ color: '#fff', fontWeight: 600, fontSize: 16, letterSpacing: '.02em' }}>SOLE</span>
+        </a>
+        <nav className="lp-links">
+          <a href="/#features">Features</a>
+          <a href="/#how">How it works</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#faq">FAQ</a>
+        </nav>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <CtaLink href="/app" variant="ghostNavy">Sign in</CtaLink>
+          <CtaLink href={`${CONTACT_URL}?intent=trial`} variant="accent">Request a trial</CtaLink>
+        </div>
+      </div>
+    </header>
+
+  );
+}
+
 export function Landing() {
   const [yearly, setYearly] = useState(false);
 
   return (
     <div className="lp" style={{ background: C.paper, color: C.ink, minHeight: '100%' }}>
       {/* ── nav ── */}
-      <header className="lp-nav" style={{ background: C.ink, borderBottom: '1px solid rgba(255,255,255,.08)' }}>
-        <div className="lp-wrap lp-nav-row">
-          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }} aria-label="SOLE home">
-            <span style={{
-              width: 30, height: 30, borderRadius: 7, background: 'rgba(253,151,7,.16)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <img src="/logo-mark.png" alt="" style={{ height: 14, width: 'auto' }} />
-            </span>
-            <span style={{ color: '#fff', fontWeight: 600, fontSize: 16, letterSpacing: '.02em' }}>SOLE</span>
-          </a>
-          <nav className="lp-links">
-            <a href="#features">Features</a>
-            <a href="#how">How it works</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#faq">FAQ</a>
-          </nav>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <CtaLink href="/app" variant="ghostNavy">Sign in</CtaLink>
-            <CtaLink href={CONTACT_URL} variant="accent" external>Request a trial</CtaLink>
-          </div>
-        </div>
-      </header>
-
+      <SiteNav />
       {/* ── hero ── */}
       <section style={{ background: C.ink, color: '#fff' }}>
         <div className="lp-wrap lp-hero">
@@ -121,7 +128,7 @@ export function Landing() {
               printable manifests and WhatsApp messages. Built with a Rome tour operator, used every day.
             </p>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 26 }}>
-              <CtaLink href={CONTACT_URL} variant="accent" external>Request a free trial</CtaLink>
+              <CtaLink href={`${CONTACT_URL}?intent=trial`} variant="accent">Request a free trial</CtaLink>
               <CtaLink href="#pricing" variant="ghostNavy">See pricing</CtaLink>
             </div>
             <p style={{ margin: '16px 0 0', fontSize: 11.5, color: 'rgba(255,255,255,.45)' }}>
@@ -302,7 +309,7 @@ export function Landing() {
                       </li>
                     ))}
                   </ul>
-                  <CtaLink href={CONTACT_URL} variant={navy ? 'accent' : 'primary'} external>
+                  <CtaLink href={`${CONTACT_URL}?plan=${p.id}`} variant={navy ? 'accent' : 'primary'}>
                     {navy ? 'Start with a free trial' : `Choose ${p.name}`}
                   </CtaLink>
                 </div>
@@ -351,7 +358,7 @@ export function Landing() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <CtaLink href={CONTACT_URL} variant="accent" external>Request a free trial</CtaLink>
+            <CtaLink href={`${CONTACT_URL}?intent=trial`} variant="accent">Request a free trial</CtaLink>
             <CtaLink href="/app" variant="ghostNavy">I have a trial link</CtaLink>
           </div>
         </div>

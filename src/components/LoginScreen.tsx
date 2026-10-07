@@ -135,9 +135,7 @@ export function LoginScreen({
           )}
 
           <a
-            href={CONTACT_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={`${CONTACT_URL}?intent=${ended ? 'buy' : 'trial'}`}
             style={{
               display: 'block', textAlign: 'center', fontSize: 12, fontWeight: 600,
               ...(ended

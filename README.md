@@ -15,6 +15,9 @@ npm run lint     # tsc --noEmit
 
 - `/` the public landing page: features, how it works, pricing, FAQ.
   Plans and prices live in `src/lib/pricing.ts`.
+- `/contact` Onyxx Tech Hub details, WhatsApp and email (`VENDOR` in
+  `src/lib/config.ts`). Every trial, plan and "get SOLE" button lands here
+  with the message pre-written.
 - `/admin` where the admin creates a trial for a client and sends the link.
 - `/app` the system itself, opened from the client's trial link.
 
