@@ -1,0 +1,499 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   SOLE — global stylesheet.
+
+   Ported verbatim from the approved design handoff (design/SOLE.dc.html) and
+   then extended. The colour tokens, radii, type scale and spacing are exactly
+   the handoff's; everything added below is *movement* — ramps, easings and
+   hover states — plus the few rules that inline styles cannot express
+   (media queries, pseudo-classes, keyframes, print).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── design tokens ──────────────────────────────────────────────────────── */
+:root {
+  /* ── surfaces ─────────────────────────────────────────────────────────────
+     Softened from the handoff's originals (paper #f6f7f9, panel #fff) after
+     the operator reported real eye strain within an hour. The cause is glare,
+     not contrast: body copy is already a muted #5b6472, but a field of pure
+     white at full luminance is what tires you across a long shift. Panels come
+     off pure white and the page behind them goes a step deeper, so the two
+     separate by tone rather than by brightness alone.
+
+     Print is unaffected — the print block forces a white sheet.             */
+  --ink: #0b1220;          /* near-black brand surface + primary text        */
+  --paper: #eef1f5;        /* app background                                 */
+  --panel: #fbfcfd;        /* cards, header, table surfaces                  */
+  --line: #e2e6ec;         /* hairline borders                               */
+  --line-soft: #eaedf2;    /* inner dividers                                 */
+  --muted: #8a919e;        /* secondary text                                 */
+  --muted-soft: #98a0ac;   /* tertiary text, icon strokes                    */
+  --faint: #b9bfc8;        /* placeholder / disabled text                    */
+  --accent: #fd9707;       /* brand orange                                   */
+  --accent-deep: #b26100;  /* orange on light backgrounds (link text)        */
+  --good: #0f6b48;
+  --good-bg: #e8f5ef;
+  --warn: #8a5106;
+  --warn-bg: #fdf3e3;
+  --bad: #9c2743;
+  --bad-bg: #fdecef;
+  --info: #1f4e8c;
+  --info-bg: #eaf1fb;
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);  /* the handoff's signature easing  */
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── UI scale ───────────────────────────────────────────────────────────
+     The handoff's type scale was drawn tight, and at 100% browser zoom the
+     11–13px body sizes read too small on a real operator's monitor. Rather
+     than re-typing several hundred inline pixel values — which would scale the
+     text but not the padding, row heights or column widths, and leave every
+     screen cramped — the whole interface is rendered at this factor. It is the
+     same thing the browser's own zoom does, so every proportion the design
+     specifies is preserved exactly.
+
+     `zoom` (not `transform: scale`) because it is a layout-time scale: text is
+     re-rasterised at the larger size and stays crisp, and the page still
+     reflows normally.
+
+     To change the density, change this one number. Two things must move with
+     it, and cannot read the variable themselves:
+       · viewport-height boxes, which use `calc(100dvh / var(--ui-scale))`
+       · the media-query breakpoints below, which are pre-multiplied by it,
+         because media queries evaluate against the *unzoomed* viewport
+         (see the note above the first @media block).                        */
+  --ui-scale: 1.1;
+}
+
+html { zoom: var(--ui-scale); }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Outfit', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+}
+* { box-sizing: border-box; }
+#root { height: 100%; }
+
+/* Figures line up in every column without each call site remembering to ask. */
+input[type='number'], .mono, [data-num] { font-variant-numeric: tabular-nums; }
+
+/* Body copy breaks on sense rather than on width. */
+p { text-wrap: pretty; }
+
+::selection { background: rgba(253, 151, 7, 0.22); color: var(--ink); }
+
+a { color: var(--accent-deep); text-decoration: none; }
+a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+input, button, select, textarea { font-family: inherit; }
+input, textarea { caret-color: var(--accent); }
+input::placeholder, textarea::placeholder { color: var(--faint); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+  background: #d3d7de;
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover { background: #b9bfc8; background-clip: content-box; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Number inputs: no spinners — the design uses plain numeric fields. */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type='number'] { -moz-appearance: textfield; }
+
+/* ── responsive overrides — cannot be expressed inline ────────────────────
+   Breakpoints, each with one job. The first number is the design width; the
+   number actually written in the query is that width × --ui-scale.
+
+     1600 → 1760  wide desktop: gutters widen, the content column does not sprawl
+     1100 → 1210  laptop/tablet: multi-column splits fold, 4-up rows become 2-up
+      820 →  902  the shell itself turns: sidebar to drawer, tables to cards
+      700 →  770  dense rows wrap, field rows stack
+      560 →  616  phone: padding tightens, controls go full width
+
+   Why pre-multiplied: `zoom` on <html> scales rendered pixels but leaves the
+   media-query viewport at its true size. A 1280px window therefore gives the
+   layout only 1280 / 1.1 ≈ 1164px of room while a query still reads 1280 — so
+   an unscaled breakpoint would fire about 10% too late and a laptop would sit
+   on the desktop layout with tablet-width space. Measured, not assumed: see
+   the probe in this change's verification.
+
+   Media queries cannot read custom properties, so these are literals. Change
+   --ui-scale and these move with it.
+
+   Anything below the 820 breakpoint assumes touch: no hover affordance is
+   load-bearing there.                                                       */
+
+/* Nothing is fluid past the content cap, so give the widest desktops a little
+   more breathing room in the gutter rather than a wider line length. */
+@media (min-width: 1760px) {
+  [data-r='pad'] { padding: 24px 32px !important; }
+}
+
+/* ── pointed-at rows ────────────────────────────────────────────────────────
+   Sent here from the dashboard to deal with four reservations out of twelve
+   hundred, the reader needs to be shown which four. The row pulses amber and
+   carries a bar down its leading edge — the bar is what survives a glance,
+   the pulse is what catches the eye arriving at the page.
+
+   It stops by itself after a few seconds. A row that never stops blinking
+   stops meaning anything, and it is unpleasant to work next to. */
+@keyframes flash-row {
+  0%, 100% { background: var(--panel); box-shadow: inset 3px 0 0 0 rgba(253,151,7,0); }
+  15%, 65% { background: #fff6e6; box-shadow: inset 3px 0 0 0 #fd9707; }
+}
+/* Two class selectors, deliberately: every row also carries the `up-sm`
+   entrance animation, and a single class would tie with it on specificity and
+   lose to whichever the stylesheet declared last. The flash has to win — it is
+   the reason the reader is on this page. */
+.row.flash-row {
+  animation: flash-row 1.4s ease-in-out 3;
+  scroll-margin-block: 96px;
+}
+
+/* Motion is the signal here, so when it is unwelcome the highlight simply
+   stays put rather than being dropped altogether. */
+@media (prefers-reduced-motion: reduce) {
+  .row.flash-row {
+    animation: none;
+    background: #fff6e6 !important;
+    box-shadow: inset 3px 0 0 0 #fd9707;
+  }
+}
+
+/* ── bounded dashboard panels ───────────────────────────────────────────────
+   The dashboard's lists grow with the book of business. Left to themselves the
+   guide queue and the import log pushed everything else a screen and a half
+   down the page, which is the opposite of what a dashboard is for. They are
+   capped and scroll inside their own panel instead, so the page keeps its shape
+   whether the day holds four departures or forty.
+
+   The scrollbar is drawn thin and grey rather than left to the platform: a
+   default Windows bar inside a 300px card is a slab of chrome down the side of
+   every panel. */
+[data-r='panelscroll'] { scrollbar-width: thin; scrollbar-color: #cdd3dc transparent; }
+[data-r='panelscroll']::-webkit-scrollbar { width: 8px; }
+[data-r='panelscroll']::-webkit-scrollbar-track { background: transparent; }
+[data-r='panelscroll']::-webkit-scrollbar-thumb {
+  background: #cdd3dc;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background-clip: content-box;
+}
+[data-r='panelscroll']::-webkit-scrollbar-thumb:hover { background: #aeb6c2; background-clip: content-box; }
+
+/* Phones only. A nested scroll area is a poor thing to hit with a thumb, so
+   below the mobile breakpoint the panels run at their natural height and the
+   page scrolls instead. Everything wider keeps the cap — including the narrow
+   laptops between the two breakpoints, where letting the lists run turned the
+   single-column layout into several screens of it. */
+@media (max-width: 902px) {
+  [data-r='panelscroll'] { max-height: none !important; overflow-y: visible !important; }
+}
+
+@media (max-width: 1210px) {
+  [data-r='g4'] { grid-template-columns: repeat(2, 1fr) !important; }
+  [data-r='g3'] { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important; }
+  [data-r='split'] { grid-template-columns: minmax(0, 1fr) !important; }
+}
+@media (max-width: 902px) {
+  /* 100dvh, not 100vh: mobile browser chrome otherwise steals the last rows. */
+  [data-r='shell'] {
+    flex-direction: column !important;
+    height: calc(100dvh / var(--ui-scale)) !important;
+  }
+
+  /* Navigation is a different component at this width, not a restyled rail:
+     ten destinations in a horizontally scrolling strip showed one of them and
+     hid the rest behind an invisible gesture. Sidebar.tsx renders a compact bar
+     plus a drawer instead, so all that is left to do here is clear the notch on
+     a landscape phone. */
+  [data-r='mobilebar'] {
+    padding-left: max(10px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(10px, env(safe-area-inset-right, 0px)) !important;
+  }
+
+  /* Two up, not one. A 768px tablet has room for a pair of stat cards, and
+     stacking them into a single 740px-wide column just makes scrolling longer
+     without making anything easier to read. One column arrives at 560. */
+  [data-r='g3'], [data-r='g4'], [data-r='g2'] { grid-template-columns: repeat(2, 1fr) !important; }
+  /* The bookings table drops its 1180px floor and hides its column header —
+     BookingsView swaps each row for a stacked card at this width. */
+  [data-r='tablewrap'] { min-width: 0 !important; }
+  [data-r='thead'] { display: none !important; }
+  [data-r='drawer'] { width: 100% !important; }
+  /* On a phone the drawer is the whole screen, so its action bar sits over the
+     home indicator unless it clears the safe area. */
+  [data-r='drawerfoot'] {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  [data-r='scroll'] { overflow-x: auto !important; }
+  [data-r='pad'] { padding: 12px !important; }
+  [data-r='doc'] { padding: 18px 16px !important; }
+
+  /* Search is the fastest route to a booking; it used to be hidden outright.
+     Give it a full-width row of its own rather than deleting the feature. */
+  [data-r='topbar'] { flex-wrap: wrap !important; gap: 8px !important; padding: 10px 12px !important; }
+  [data-r='search'] { order: 10 !important; width: 100% !important; }
+  [data-r='search'] input { width: 100% !important; }
+
+  /* One line: title, then refresh and the bell hard against the right edge.
+     The flex spacer is what used to strand the bell on a line of its own. */
+  [data-r='topbar'] > [data-spacer] { display: none !important; }
+  [data-r='topbar'] [data-r='title'] { flex: 1 1 auto !important; min-width: 0 !important; }
+  /* The subtitle restates what the screen already says; on a phone that costs
+     the title its width. */
+  [data-r='topbar'] [data-r='sub'] { display: none !important; }
+
+  /* A screen toolbar is a row of controls on a laptop and a two-line block on
+     a tablet. The flex spacer stays: it keeps the first line's actions right
+     aligned, and wrapped items simply start at the left of the next line. */
+  [data-r='toolbar'] { flex-wrap: wrap !important; row-gap: 8px !important; }
+
+  /* Segmented period/tab controls scroll rather than wrapping mid-control,
+     which would split one control across two lines. */
+  [data-r='seg'] { max-width: 100% !important; overflow-x: auto !important; scrollbar-width: none; }
+  [data-r='seg']::-webkit-scrollbar { display: none; }
+}
+
+/* ── narrow: dense rows, field grids and section headers ────────────────────
+   The screens are built from flex rows of fixed-width columns, which is right
+   on a laptop and overflows on a phone. Rather than rewriting every screen,
+   three hooks reflow them: `listrow` wraps a dense row, `fields` stacks a row
+   of form controls, `sechead` lets a section header's buttons drop to a second
+   line. `data-grow` marks the one child that should claim a full line.        */
+@media (max-width: 770px) {
+  [data-r='listrow'] {
+    flex-wrap: wrap !important;
+    row-gap: 6px !important;
+    /* Once a row occupies two lines, centring it vertically makes the short
+       cells float in the middle of the tall ones. Top-align instead. */
+    align-items: flex-start !important;
+  }
+  [data-r='listrow'] [data-grow] {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+  }
+
+  [data-r='fields'] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  [data-r='fields'] > label,
+  [data-r='fields'] > div {
+    width: 100% !important; min-width: 0 !important; flex: 1 1 auto !important;
+  }
+  [data-r='fields'] input,
+  [data-r='fields'] select,
+  [data-r='fields'] textarea { width: 100% !important; }
+
+  [data-r='sechead'] { flex-wrap: wrap !important; row-gap: 8px !important; height: auto !important; }
+  [data-r='sechead'] select { width: 100% !important; }
+
+  [data-r='filters'] > label { flex: 1 1 100% !important; min-width: 0 !important; }
+
+  /* Anything still scrolling sideways (the manifest table) gets momentum. */
+  [data-r='scroll'], [data-r='doc'] { -webkit-overflow-scrolling: touch; }
+}
+
+/* ── phones ─────────────────────────────────────────────────────────────── */
+@media (max-width: 616px) {
+  /* The scroll area clears the home indicator, so the last card is never half
+     under it. */
+  [data-r='pad'] {
+    padding: 10px !important;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  [data-r='doc'] { padding: 14px 12px !important; }
+  /* Below this a two-up card is narrower than its own contents. */
+  [data-r='g3'], [data-r='g4'], [data-r='g2'] { grid-template-columns: 1fr !important; }
+
+  /* Vertical rhythm tightens with the gutters. At 14px the stacked sections
+     read as loose on a 390px screen and cost a screenful of scroll. */
+  [data-r='stack'] { gap: 10px !important; }
+  /* (`.nav-item` sizing used to live here. The rail it belonged to is never
+     rendered below 820 any more — the drawer sets its own 44px targets.) */
+  /* A toast pinned to one corner is easy to miss on a small screen. */
+  [data-r='toasts'] {
+    left: 10px !important; right: 10px !important; bottom: 10px !important;
+  }
+  [data-r='toasts'] > div { max-width: none !important; }
+
+  /* A dialog on a phone is a sheet: it uses the width it has, and its own body
+     scrolls rather than the page behind it. */
+  [data-r='modalwrap'] { padding: 10px !important; align-items: flex-start !important; }
+  [data-r='modal'] { max-height: calc((100dvh - 20px) / var(--ui-scale)) !important; }
+
+  /* Footer actions stack and fill, so neither is a 90px target beside a
+     thumb-width Cancel. The primary action stays last / bottom. */
+  [data-r='modalfoot'] { flex-direction: column-reverse !important; align-items: stretch !important; }
+  [data-r='modalfoot'] > * { width: 100% !important; justify-content: center !important; }
+
+  /* Toolbar actions become a full-width row of equal buttons rather than a
+     ragged wrap of six different widths. */
+  [data-r='toolbar'] { gap: 6px !important; }
+  [data-r='toolbar'] [data-r='seg'] { width: 100% !important; }
+  [data-r='toolbar'] [data-r='seg'] > * { flex: 1 0 auto !important; }
+
+  /* A 240px search box beside a 120px gap reads as broken. Search takes the
+     line it needs; the fixed width was only ever a desktop measure. */
+  [data-r='toolbar'] [data-grow] { flex: 1 1 100% !important; min-width: 0 !important; }
+  [data-r='toolbar'] [data-grow] input { width: 100% !important; }
+}
+
+/* ── coarse pointers ──────────────────────────────────────────────────────
+   Row actions are revealed on hover, which never fires on touch — so on a
+   touch device they are simply always visible.                             */
+@media (hover: none) {
+  .row .row-actions { opacity: 1 !important; }
+}
+
+/* ── motion ─────────────────────────────────────────────────────────────────
+   Movement only. No new colour, shadow or surface — the flat design tokens
+   are unchanged; these just give every state change a ramp.                 */
+@keyframes dcFade   { from { opacity: 0 } to { opacity: 1 } }
+@keyframes dcUp     { from { opacity: 0; transform: translateY(9px) } to { opacity: 1; transform: none } }
+@keyframes dcUpSm   { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+@keyframes dcPop    { from { opacity: 0; transform: translateY(10px) scale(.985) } to { opacity: 1; transform: none } }
+@keyframes dcRight  { from { opacity: 0; transform: translateX(22px) } to { opacity: 1; transform: none } }
+@keyframes dcLeft   { from { transform: translateX(-100%) } to { transform: none } }
+@keyframes dcDown   { from { opacity: 0; transform: translateY(-6px) } to { opacity: 1; transform: none } }
+@keyframes dcSpin   { to { transform: rotate(360deg) } }
+@keyframes dcShake  { 10%,90% { transform: translateX(-1px) } 20%,80% { transform: translateX(2px) } 30%,50%,70% { transform: translateX(-3px) } 40%,60% { transform: translateX(3px) } }
+@keyframes dcBar    { from { width: 0 } }
+@keyframes dcSplash { 0% { opacity: 0; transform: scale(.94) } 60% { opacity: 1; transform: scale(1) } 100% { opacity: 1; transform: scale(1) } }
+@keyframes dcTrack  { from { width: 0 } to { width: 100% } }
+@keyframes dcBlink  { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+@keyframes dcCount  { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+
+.fade    { animation: dcFade .28s ease both }
+.up      { animation: dcUp .34s var(--ease) both }
+.up-sm   { animation: dcUpSm .26s var(--ease) both }
+.pop     { animation: dcPop .24s var(--ease) both }
+.slide-r { animation: dcRight .3s var(--ease) both }
+/* No fill mode, unlike the other entrances. This one carries the only
+   navigation a phone has, so its resting state should be "where it belongs"
+   for as much of its life as possible — a backwards fill would additionally
+   park it off-screen before the animation's first frame. */
+.slide-l { animation: dcLeft .26s var(--ease) }
+.drop    { animation: dcDown .18s var(--ease) both }
+.spin    { animation: dcSpin .7s linear infinite }
+.shake   { animation: dcShake .42s both }
+.bar     { animation: dcBar .75s var(--ease) both }
+.splash-mark { animation: dcSplash 1s var(--ease) both }
+.track   { animation: dcTrack 1.25s var(--ease-soft) both }
+.view-a, .view-b { animation: dcUp .3s var(--ease) both }
+.blink   { animation: dcBlink 1.6s ease-in-out infinite }
+.count   { animation: dcCount .32s var(--ease) both }
+
+/* every interactive surface eases rather than snaps */
+button, a, input, select, textarea, [data-t] {
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease,
+              opacity .16s ease, transform .14s var(--ease), box-shadow .18s ease;
+}
+button:not([disabled]):active { transform: scale(.985) }
+
+/* Buttons rise a hair on hover and press back down. Both live here so the
+   :active state can win — an inline transform would outrank it. */
+.btn { transition: transform .16s var(--ease), background-color .16s ease,
+                   border-color .16s ease, color .16s ease, box-shadow .18s ease }
+.btn:not([disabled]):hover { transform: translateY(-1px) }
+.btn:not([disabled]):active { transform: translateY(0) scale(.985) }
+
+/* Restraint is the point: a 1px rise plus a border that darkens reads as
+   considered, where a 2px jump reads as a web page. */
+.lift { transition: transform .2s var(--ease), border-color .16s ease, background-color .16s ease, box-shadow .2s ease }
+.lift:hover { transform: translateY(-1px); border-color: #d8dde5 }
+
+/* The handoff bans decorative depth, so the hover cue here is a whisper of
+   contact shadow under a raised card - not an elevation layer. */
+.lift-shadow { transition: transform .2s var(--ease), box-shadow .22s ease, border-color .16s ease }
+.lift-shadow:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(11, 18, 32, .06); border-color: #d8dde5 }
+
+.row  { transition: background-color .15s ease, opacity .18s ease }
+.row:hover { background: #fafbfc }
+.nudge:hover { transform: translateX(1px) }
+
+/* Sidebar nav + any dark-surface control. */
+.nav-item:hover { background: rgba(255, 255, 255, .07) }
+
+/* Reveal a row's trailing actions only while the row is hovered/focused. */
+.row .row-actions { opacity: 0; transition: opacity .16s ease }
+.row:hover .row-actions,
+.row:focus-within .row-actions { opacity: 1 }
+
+[disabled] { opacity: .48; cursor: not-allowed !important; transform: none !important }
+.grab { cursor: grab }
+.grab:active { cursor: grabbing }
+.drag-ghost { opacity: .38 }
+
+/* Drop target while a traveller chip is being dragged over a group. */
+.drop-live { box-shadow: inset 0 0 0 2px rgba(253, 151, 7, .5); background: #fffdf8 }
+
+/* keyboard focus ring, drawn with the accent, no layout shift. The outline
+   follows each control's own border-radius, so it reads as part of the shape. */
+button:focus-visible, a:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid rgba(253, 151, 7, .55);
+  outline-offset: 2px;
+}
+
+/* Dark surfaces need the ring lightened or it disappears into the navy. */
+[data-r='side'] button:focus-visible,
+[data-r='sidepanel'] button:focus-visible,
+[data-r='sidepanel'] a:focus-visible {
+  outline-color: rgba(253, 180, 78, .8);
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}
+
+/* ── print: the manifest document only ──────────────────────────────────── */
+@media print {
+  [data-print='hide'] { display: none !important; }
+  html, body { background: #fff !important; }
+  [data-r='shell'] { display: block !important; height: auto !important; overflow: visible !important; }
+  [data-r='pad'] { overflow: visible !important; padding: 0 !important; }
+  [data-r='doc'] { border: 0 !important; padding: 0 !important; border-radius: 0 !important; }
+  [data-r='scroll'] { overflow: visible !important; }
+
+  /* Browsers drop background colours when printing unless asked not to, which
+     turned the navy band headers into white bars carrying white text and left
+     the sheet a wash of pale grey — unreadable on a phone. Print the colours
+     the document was designed with. */
+  [data-r='doc'], [data-r='doc'] * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Ink is cheap next to a guide misreading a runsheet: lift the body copy off
+     grey and onto near-black for the printed copy only. */
+  [data-r='doc'] td { color: #1a2230 !important; }
+  [data-r='doc'] th { color: #3f4756 !important; }
+
+  /* A runsheet is read across a whole page: never split a band's header from
+     its passengers, or a passenger row across two sheets. */
+  [data-r='doc'] table { break-inside: auto; }
+  [data-r='doc'] tr { break-inside: avoid; break-after: auto; }
+  [data-r='doc'] thead { display: table-header-group; }
+}

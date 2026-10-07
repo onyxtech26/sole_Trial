@@ -1,0 +1,16 @@
+node_modules
+dist
+.vercel
+.env
+.env.local
+*.local
+.DS_Store
+
+# Generated knowledge graph (~1.8 MB, rebuildable with /graphify)
+graphify-out
+
+# Per-machine agent settings; .claude/launch.json is shared deliberately
+.claude/settings.local.json
+
+# Local database backups (scripts/backup.ts) hold customer data
+backups
